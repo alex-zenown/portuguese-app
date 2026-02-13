@@ -1,37 +1,39 @@
 const CACHE_NAME = 'portugues-v1';
-const ASSETS = [
-  '/',
-  '/index.html',
-  '/css/styles.css',
-  '/js/app.js',
-  '/js/storage.js',
-  '/js/srs.js',
-  '/js/audio.js',
-  '/js/claude-api.js',
-  '/js/views/home.js',
-  '/js/views/pronunciation.js',
-  '/js/views/vocabulary.js',
-  '/js/views/grammar.js',
-  '/js/views/conversation.js',
-  '/js/views/progress.js',
-  '/js/views/settings.js',
-  '/js/data/pronunciation-data.js',
-  '/js/data/vocabulary-data.js',
-  '/js/data/grammar-data.js',
-  '/js/data/lesson-plan.js',
-  '/js/components/card.js',
-  '/js/components/modal.js',
-  '/js/components/toast.js',
-  '/js/components/progress-bar.js',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/manifest.json',
+
+// Use relative paths so it works on GitHub Pages subpath
+const ASSET_PATHS = [
+  './',
+  './index.html',
+  './css/styles.css',
+  './js/app.js',
+  './js/storage.js',
+  './js/srs.js',
+  './js/audio.js',
+  './js/claude-api.js',
+  './js/views/home.js',
+  './js/views/pronunciation.js',
+  './js/views/vocabulary.js',
+  './js/views/grammar.js',
+  './js/views/conversation.js',
+  './js/views/progress.js',
+  './js/views/settings.js',
+  './js/data/pronunciation-data.js',
+  './js/data/vocabulary-data.js',
+  './js/data/grammar-data.js',
+  './js/data/lesson-plan.js',
+  './js/components/card.js',
+  './js/components/modal.js',
+  './js/components/toast.js',
+  './js/components/progress-bar.js',
+  './icons/icon-192.png',
+  './icons/icon-512.png',
+  './manifest.json',
 ];
 
 // Install — cache all app assets
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSET_PATHS))
   );
   self.skipWaiting();
 });

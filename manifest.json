@@ -2,7 +2,7 @@
   "name": "Português — Learn European Portuguese",
   "short_name": "Português",
   "description": "Learn European Portuguese with spaced repetition and AI conversations",
-  "start_url": "/",
+  "start_url": ".",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#fafafa",
