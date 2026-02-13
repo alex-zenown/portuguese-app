@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Português — Learn European Portuguese</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#006600">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body>
+  <div id="app">
+    <header id="app-header">
+      <h1 id="header-title">Português</h1>
+    </header>
+    <main id="app-content"></main>
+    <div id="toast-container"></div>
+  </div>
+
+  <nav id="bottom-nav">
+    <a href="#home" class="nav-item active" data-view="home">
+      <span class="nav-icon">🏠</span>
+      <span class="nav-label">Início</span>
+    </a>
+    <a href="#pronunciation" class="nav-item" data-view="pronunciation">
+      <span class="nav-icon">🔊</span>
+      <span class="nav-label">Sons</span>
+    </a>
+    <a href="#vocabulary" class="nav-item" data-view="vocabulary">
+      <span class="nav-icon">📚</span>
+      <span class="nav-label">Palavras</span>
+    </a>
+    <a href="#grammar" class="nav-item" data-view="grammar">
+      <span class="nav-icon">✏️</span>
+      <span class="nav-label">Gramática</span>
+    </a>
+    <a href="#conversation" class="nav-item" data-view="conversation">
+      <span class="nav-icon">💬</span>
+      <span class="nav-label">Conversa</span>
+    </a>
+  </nav>
+
+  <script type="module" src="js/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js');
+    }
+  </script>
+</body>
+</html>
