@@ -16,9 +16,9 @@ async function authenticate() {
   dsApiClient.setBasePath(config.docusign.basePath);
   dsApiClient.setOAuthBasePath(config.docusign.authServer);
 
-  const privateKey = fs.readFileSync(
-    path.resolve(config.docusign.privateKeyPath)
-  );
+  const privateKey = process.env.DOCUSIGN_PRIVATE_KEY
+    ? Buffer.from(process.env.DOCUSIGN_PRIVATE_KEY.replace(/\\n/g, '\n'))
+    : fs.readFileSync(path.resolve(config.docusign.privateKeyPath));
 
   const results = await dsApiClient.requestJWTUserToken(
     config.docusign.integrationKey,
