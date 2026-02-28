@@ -50,9 +50,10 @@ async function sendLetterOfEngagement(client) {
     tabs: {
       textTabs: [
         { tabLabel: 'ClientName', value: client.name },
-        { tabLabel: 'ClientEmail', value: client.email },
         { tabLabel: 'Program', value: client.program || '' },
         { tabLabel: 'Price', value: client.price || '' },
+        { tabLabel: 'DateFrom', value: client.dateFrom || '' },
+        { tabLabel: 'DateTo', value: client.dateTo || '' },
       ],
     },
   });

@@ -42,7 +42,7 @@ router.get('/api/clients', (req, res) => {
 
 // Send contract
 router.post('/api/send', express.json(), async (req, res) => {
-  const { name, email, phone, program, price } = req.body;
+  const { name, email, phone, program, price, dateFrom, dateTo } = req.body;
 
   if (!name || !email) {
     return res.status(400).json({ error: 'Name and email are required' });
@@ -55,6 +55,8 @@ router.post('/api/send', express.json(), async (req, res) => {
       phone: phone || null,
       program: program || null,
       price: price || null,
+      dateFrom: dateFrom || null,
+      dateTo: dateTo || null,
     });
 
     const envelopeId = await docusign.sendLetterOfEngagement({
@@ -63,6 +65,8 @@ router.post('/api/send', express.json(), async (req, res) => {
       phone,
       program,
       price,
+      dateFrom,
+      dateTo,
     });
 
     queries.updateEnvelope.run({ id: result.lastInsertRowid, envelopeId });

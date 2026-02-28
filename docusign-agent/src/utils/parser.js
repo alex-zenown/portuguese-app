@@ -54,6 +54,8 @@ function parseClientDetails(text) {
     phone: null,
     program: null,
     price: null,
+    dateFrom: null,
+    dateTo: null,
   };
 
   for (const part of parts) {
@@ -69,6 +71,17 @@ function parseClientDetails(text) {
       /^[£$€]?\s*[\d,]+(?:\.\d{2})?$/.test(part.replace(/\s/g, ''))
     ) {
       result.price = part;
+    } else if (
+      !result.dateFrom &&
+      /^\d{4}-\d{2}-\d{2}$/.test(part)
+    ) {
+      result.dateFrom = part;
+    } else if (
+      !result.dateTo &&
+      result.dateFrom &&
+      /^\d{4}-\d{2}-\d{2}$/.test(part)
+    ) {
+      result.dateTo = part;
     } else if (!result.name) {
       result.name = part;
     } else if (!result.program) {

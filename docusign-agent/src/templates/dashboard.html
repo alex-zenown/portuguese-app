@@ -109,6 +109,16 @@
       <label for="price">Price</label>
       <input type="text" id="price" placeholder="2,500">
     </div>
+    <div class="row">
+      <div>
+        <label for="dateFrom">Date From</label>
+        <input type="date" id="dateFrom">
+      </div>
+      <div>
+        <label for="dateTo">Date To</label>
+        <input type="date" id="dateTo">
+      </div>
+    </div>
     <button id="sendBtn" onclick="sendContract()">Send Letter of Engagement</button>
     <div id="result" class="result"></div>
   </div>
@@ -156,6 +166,8 @@
         phone: document.getElementById('phone').value.trim(),
         program: document.getElementById('program').value.trim(),
         price: document.getElementById('price').value.trim(),
+        dateFrom: document.getElementById('dateFrom').value,
+        dateTo: document.getElementById('dateTo').value,
       };
 
       if (!data.name || !data.email) {
@@ -178,7 +190,7 @@
           result.textContent = `Letter of Engagement sent to ${data.name} (${data.email}). Envelope ID: ${json.envelopeId}`;
           result.className = 'result success';
           // Clear form
-          ['name', 'email', 'phone', 'program', 'price'].forEach(id => {
+          ['name', 'email', 'phone', 'program', 'price', 'dateFrom', 'dateTo'].forEach(id => {
             document.getElementById(id).value = '';
           });
           loadClients();

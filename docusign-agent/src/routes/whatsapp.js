@@ -51,7 +51,7 @@ router.post('/webhook', express.urlencoded({ extended: false }), async (req, res
 });
 
 async function handleSend(parsed) {
-  let { name, email, phone, program, price } = parsed;
+  let { name, email, phone, program, price, dateFrom, dateTo } = parsed;
 
   if (!name || !email) {
     // Try to find client in Calendly by name
@@ -61,7 +61,7 @@ async function handleSend(parsed) {
         if (booking) {
           email = booking.email;
           phone = phone || booking.phone;
-          return await sendContract({ name, email, phone, program, price }, true);
+          return await sendContract({ name, email, phone, program, price, dateFrom, dateTo }, true);
         }
       } catch (err) {
         // Calendly lookup failed, continue
@@ -70,7 +70,7 @@ async function handleSend(parsed) {
     return `I need at least a name and email. Try:\n\n"Send contract to John Doe, john@email.com, 07700900000, Executive Coaching, £2500"`;
   }
 
-  return await sendContract({ name, email, phone, program, price }, false);
+  return await sendContract({ name, email, phone, program, price, dateFrom, dateTo }, false);
 }
 
 async function sendContract(client, fromCalendly) {
@@ -81,6 +81,8 @@ async function sendContract(client, fromCalendly) {
     phone: client.phone || null,
     program: client.program || null,
     price: client.price || null,
+    dateFrom: client.dateFrom || null,
+    dateTo: client.dateTo || null,
   });
 
   // Send via DocuSign
@@ -97,7 +99,9 @@ async function sendContract(client, fromCalendly) {
     `Email: ${client.email}\n` +
     `Phone: ${client.phone || 'N/A'}\n` +
     `Program: ${client.program || 'N/A'}\n` +
-    `Price: ${client.price || 'N/A'}\n\n` +
+    `Price: ${client.price || 'N/A'}\n` +
+    `Date from: ${client.dateFrom || 'N/A'}\n` +
+    `Date to: ${client.dateTo || 'N/A'}\n\n` +
     `I'll send a reminder if they don't sign within ${config.followup.firstReminderHours} hours.`
   );
 }

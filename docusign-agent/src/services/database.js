@@ -17,6 +17,8 @@ db.exec(`
     phone TEXT,
     program TEXT,
     price TEXT,
+    date_from TEXT,
+    date_to TEXT,
     envelope_id TEXT,
     status TEXT DEFAULT 'pending',
     created_at TEXT DEFAULT (datetime('now')),
@@ -30,8 +32,8 @@ db.exec(`
 
 const queries = {
   insertClient: db.prepare(`
-    INSERT INTO clients (name, email, phone, program, price)
-    VALUES (@name, @email, @phone, @program, @price)
+    INSERT INTO clients (name, email, phone, program, price, date_from, date_to)
+    VALUES (@name, @email, @phone, @program, @price, @dateFrom, @dateTo)
   `),
 
   updateEnvelope: db.prepare(`

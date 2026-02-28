@@ -39,9 +39,10 @@ Click "Accept" to grant your app permission to send envelopes on your behalf.
 4. Add a **Role** called exactly: `Client`
 5. Add these **Text tabs** (custom fields) to the template:
    - `ClientName` — where the client's name appears
-   - `ClientEmail` — where the client's email appears
    - `Program` — where the coaching program name appears
    - `Price` — where the price appears
+   - `DateFrom` — contract start date
+   - `DateTo` — contract end date
 6. Add a **Signature** tab where the client should sign
 7. Add a **Date Signed** tab
 8. Save the template and note the **Template ID** (this is `DOCUSIGN_TEMPLATE_ID`)
