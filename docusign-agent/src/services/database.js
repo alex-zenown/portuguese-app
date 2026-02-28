@@ -2,9 +2,14 @@ const Database = require('better-sqlite3');
 const path = require('path');
 const fs = require('fs');
 
-const dataDir = path.join(__dirname, '../../data');
+// Use /data for Railway volumes, fallback to /tmp, then local ./data
+const dataDir = process.env.DATA_DIR
+  || (fs.existsSync('/data') ? '/data' : null)
+  || path.join(__dirname, '../../data');
+
 if (!fs.existsSync(dataDir)) fs.mkdirSync(dataDir, { recursive: true });
 
+console.log(`Database directory: ${dataDir}`);
 const db = new Database(path.join(dataDir, 'agent.db'));
 
 db.pragma('journal_mode = WAL');

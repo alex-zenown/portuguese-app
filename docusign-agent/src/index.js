@@ -1,29 +1,37 @@
 const express = require('express');
 const config = require('./config');
-const whatsappRoutes = require('./routes/whatsapp');
-const dashboardRoutes = require('./routes/dashboard');
-const docusignWebhook = require('./routes/docusign-webhook');
-const { startScheduler } = require('./services/followup');
 
 const app = express();
 
-// Health check
+// Health check (defined early, before any DB-dependent routes)
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'docusign-contract-agent' });
 });
 
-// Routes
-app.use('/whatsapp', whatsappRoutes);
-app.use('/dashboard', dashboardRoutes);
-app.use('/docusign', docusignWebhook);
+// Load routes (these require database)
+try {
+  const whatsappRoutes = require('./routes/whatsapp');
+  const dashboardRoutes = require('./routes/dashboard');
+  const docusignWebhook = require('./routes/docusign-webhook');
+  const { startScheduler } = require('./services/followup');
 
-// Start follow-up scheduler
-startScheduler();
+  app.use('/whatsapp', whatsappRoutes);
+  app.use('/dashboard', dashboardRoutes);
+  app.use('/docusign', docusignWebhook);
 
-app.listen(config.port, () => {
+  startScheduler();
+} catch (err) {
+  console.error('Failed to load routes/services:', err);
+  app.use((req, res) => {
+    res.status(503).json({ error: 'Service starting up — check logs', detail: err.message });
+  });
+}
+
+const port = config.port;
+app.listen(port, '0.0.0.0', () => {
   console.log(`Mind Station Coaching - Contract Agent`);
-  console.log(`Server running on port ${config.port}`);
-  console.log(`Dashboard: http://localhost:${config.port}/dashboard`);
+  console.log(`Server running on port ${port}`);
+  console.log(`Dashboard: ${config.baseUrl}/dashboard`);
   console.log(`WhatsApp webhook: ${config.baseUrl}/whatsapp/webhook`);
   console.log(`DocuSign webhook: ${config.baseUrl}/docusign/webhook`);
 });
