@@ -1,0 +1,9 @@
+[phases.setup]
+nixPkgs = ["nodejs_20", "python3", "gcc", "gnumake", "pkg-config"]
+aptPkgs = ["libatomic1", "build-essential"]
+
+[phases.install]
+cmds = ["npm ci --production || npm install --production"]
+
+[start]
+cmd = "node src/index.js"
