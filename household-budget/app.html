@@ -321,7 +321,25 @@ let STATE = {
 };
 
 function curYM(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'); }
-function loadCfg(){ try{ return JSON.parse(localStorage.getItem('hb_config'))||defCfg(); }catch{ return defCfg(); } }
+function loadCfg(){
+  try{
+    const saved=JSON.parse(localStorage.getItem('hb_config'));
+    if(!saved) return defCfg();
+    const def=defCfg();
+    return {
+      ...def, ...saved,
+      income:{...def.income,...(saved.income||{})},
+      budgets:saved.budgets||def.budgets,
+      fixedAmounts:{...def.fixedAmounts,...(saved.fixedAmounts||{})},
+      merchantRules:{...def.merchantRules,...(saved.merchantRules||{})},
+      goals:{
+        personal:{...def.goals.personal,...(saved.goals?.personal||{})},
+        joint:{...def.goals.joint,...(saved.goals?.joint||{})},
+      },
+      claudeApiKey:saved.claudeApiKey||'',
+    };
+  }catch{ return defCfg(); }
+}
 function loadHist(){ try{ return JSON.parse(localStorage.getItem('hb_history'))||[]; }catch{ return []; } }
 function saveCfg(){ localStorage.setItem('hb_config',JSON.stringify(STATE.config)); }
 function saveHist(){ localStorage.setItem('hb_history',JSON.stringify(STATE.history)); }
@@ -981,7 +999,7 @@ function openMonth(m){ const r=STATE.history.find(h=>h.month===m); if(!r) return
 // ═══════════════════════════════════════════════════════
 function renderSettings(){
   const cfg=STATE.config;
-  const curBudget=cfg.budgets[STATE.selectedMonth]||cfg.budgets[curYM()]||{};
+  const budgets=cfg.budgets||{}; const curBudget=budgets[STATE.selectedMonth]||budgets[curYM()]||{};
   let h='';
   // income
   h+='<div class="sett-section"><h3>Income</h3>';
