@@ -1016,8 +1016,12 @@ function renderSettings(){
   h+='</div>';
   // claude api
   h+='<div class="sett-section"><h3>Claude AI Insights <small>optional</small></h3>';
-  h+='<div class="sett-row"><label class="sett-label">API Key<small>Get one at console.anthropic.com</small></label><input class="sett-input full" type="password" id="s-apikey" value="'+esc(cfg.claudeApiKey||')'+'+" placeholder="sk-ant-..."></div>';
+  h+='<div class="sett-row"><label class="sett-label">API Key<small>Get one at console.anthropic.com</small></label><input class="sett-input full" type="password" id="s-apikey" value="'+esc(cfg.claudeApiKey||'')+'" placeholder="sk-ant-..."></div>';
   h+='<div class="api-note">Cost: ~\u20ac0.004 per analysis using Claude Haiku. Stored locally in your browser only. Leave blank to use rule-based insights.</div>';
+  h+='</div>';
+  h+='<div class="sett-section" style="border-color:#3d2020"><h3 style="color:var(--red)">Reset</h3>';
+  h+='<p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Clears all saved reports, settings, and merchant rules from this browser. Use if the app is misbehaving.</p>';
+  h+='<button onclick="if(confirm(\'Delete ALL saved data? This cannot be undone.\')){localStorage.removeItem(\'hb_config\');localStorage.removeItem(\'hb_history\');location.reload();}" style="padding:8px 18px;border-radius:7px;border:1px solid var(--red);background:transparent;color:var(--red);font-family:var(--mono);font-size:12px;cursor:pointer">Clear all data &amp; reload</button>';
   h+='</div>';
   document.getElementById('settings-content').innerHTML=h;
 }
@@ -1060,14 +1064,26 @@ function dlReport(){
 // INIT
 // ═══════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded',()=>{
-  seedIfNeeded();
-  populateMonthSel();
-  if(STATE.history.length){
-    STATE.currentReport=STATE.history[0];
-    renderDashboard(STATE.currentReport);
-    showView('dashboard');
-  } else {
-    showView('upload');
+  try{
+    seedIfNeeded();
+    populateMonthSel();
+    if(STATE.history.length){
+      STATE.currentReport=STATE.history[0];
+      renderDashboard(STATE.currentReport);
+      showView('dashboard');
+    } else {
+      showView('upload');
+    }
+  } catch(err){
+    console.error('[Budget App] Init error:', err);
+    document.body.insertAdjacentHTML('afterbegin',
+      '<div style="background:#ff5c5c;color:#fff;padding:1rem 1.5rem;font-family:monospace;font-size:13px;position:fixed;top:0;left:0;right:0;z-index:9999">'+
+      '<strong>App error:</strong> '+err.message+' — <button onclick="if(confirm(\'Clear all saved data and reload?\'))'+
+      '{localStorage.removeItem(\'hb_config\');localStorage.removeItem(\'hb_history\');location.reload();}" '+
+      'style="margin-left:1rem;background:transparent;border:1px solid #fff;color:#fff;padding:3px 10px;border-radius:4px;cursor:pointer;font-family:monospace">'+
+      'Clear data &amp; reload</button>'+
+      '<button onclick="this.parentElement.remove()" style="margin-left:.5rem;background:transparent;border:none;color:#fff;font-size:16px;cursor:pointer">&times;</button>'+
+      '</div>');
   }
 });
 </script>
