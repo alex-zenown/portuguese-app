@@ -192,6 +192,7 @@ section.ds{margin-bottom:1.5rem}
 @media(max-width:900px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.grid2{grid-template-columns:1fr}.goals-grid{grid-template-columns:1fr}.drop-zones{grid-template-columns:1fr}}
 @media(max-width:600px){.kpi-grid{grid-template-columns:repeat(2,1fr)}}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 <div id="toast"></div>
@@ -202,6 +203,7 @@ section.ds{margin-bottom:1.5rem}
     <button class="nav-btn" id="nav-dashboard" onclick="showView('dashboard')">Dashboard</button>
     <button class="nav-btn" id="nav-history"   onclick="showView('history')">History</button>
     <button class="nav-btn" id="nav-settings"  onclick="showView('settings')">Settings</button>
+    <button class="nav-btn" id="nav-sync" onclick="doSync()" style="display:none">&#9729; Sync</button>
   </div>
   <div class="nav-avatar">A</div>
 </nav>
@@ -337,6 +339,8 @@ function loadCfg(){
         joint:{...def.goals.joint,...(saved.goals?.joint||{})},
       },
       claudeApiKey:saved.claudeApiKey||'',
+      supabaseUrl:saved.supabaseUrl||'',
+      supabaseKey:saved.supabaseKey||'',
     };
   }catch{ return defCfg(); }
 }
@@ -367,6 +371,8 @@ function defCfg(){
       }
     },
     claudeApiKey:'',
+    supabaseUrl:'',
+    supabaseKey:'',
   };
 }
 
@@ -512,6 +518,52 @@ function parsePotTransfers(content,month){
 }
 
 // ═══════════════════════════════════════════════════════
+// SUPABASE CLOUD SYNC
+// ═══════════════════════════════════════════════════════
+function getSB(){
+  if(typeof supabase==='undefined') return null;
+  const url=STATE.config.supabaseUrl||'', key=STATE.config.supabaseKey||'';
+  if(!url||!key) return null;
+  return supabase.createClient(url,key);
+}
+async function syncLoad(){
+  const sb=getSB(); if(!sb) return false;
+  try{
+    const {data,error}=await sb.from('household_data').select('config,history').eq('id','default').single();
+    if(error||!data) return false;
+    if(data.config){
+      // Merge cloud config but keep local Supabase credentials
+      const local={supabaseUrl:STATE.config.supabaseUrl,supabaseKey:STATE.config.supabaseKey};
+      STATE.config={...defCfg(),...data.config,...local};
+      localStorage.setItem('hb_config',JSON.stringify(STATE.config));
+    }
+    if(data.history){ STATE.history=data.history; localStorage.setItem('hb_history',JSON.stringify(STATE.history)); }
+    return true;
+  } catch(e){ console.warn('syncLoad error',e); return false; }
+}
+async function syncSave(){
+  const sb=getSB(); if(!sb) return false;
+  try{
+    const {error}=await sb.from('household_data').upsert({id:'default',config:STATE.config,history:STATE.history,updated_at:new Date().toISOString()});
+    return !error;
+  } catch(e){ console.warn('syncSave error',e); return false; }
+}
+function showSyncBtn(){ const b=document.getElementById('nav-sync'); if(b) b.style.display=''; }
+async function doSync(){
+  const btn=document.getElementById('nav-sync');
+  if(btn){btn.textContent='\u2601 Syncing\u2026';btn.disabled=true;}
+  const ok=await syncLoad();
+  if(ok){
+    toast('\u2601\ufe0f Synced from cloud \u2713');
+    if(STATE.history.length){ STATE.currentReport=STATE.history[0]; renderDashboard(STATE.currentReport); showView('dashboard'); }
+    renderHistory();
+  } else {
+    toast('\u26a0\ufe0f Sync failed \u2014 check Supabase settings');
+  }
+  if(btn){btn.textContent='\u2601 Sync';btn.disabled=false;}
+}
+
+// ═══════════════════════════════════════════════════════
 // VIEW SWITCHING
 // ═══════════════════════════════════════════════════════
 function showView(name){
@@ -641,7 +693,11 @@ function finishAnalysis(month,allTx,potData){
   STATE.currentReport=report;
   renderDashboard(report);
   showView('dashboard');
-  toast('Report ready for '+ml(month)+' \u2714');
+  if(STATE.config.supabaseUrl&&STATE.config.supabaseKey){
+    syncSave().then(ok=>toast('Report ready for '+ml(month)+' '+(ok?'\u2601\ufe0f synced':'\u2714')));
+  } else {
+    toast('Report ready for '+ml(month)+' \u2714');
+  }
   document.getElementById('btn-generate').innerHTML='\u2756 Generate Report';
   document.getElementById('btn-generate').disabled=false;
 }
@@ -1032,6 +1088,12 @@ function renderSettings(){
   const jm=cfg.goals?.joint?.mandatory||{};
   h+='<div class="sett-row"><label class="sett-label">Joint mandatory target (\u20ac each)<small>\u20ac500 each = \u20ac1,000 total in joint account</small></label><input class="sett-input" type="number" id="g-jm-target" value="'+(jm.monthlyTarget||500)+'" min="0"></div>';
   h+='</div>';
+  // supabase sync
+  h+='<div class="sett-section"><h3>Cloud Sync <small>share with Chloe</small></h3>';
+  h+='<p style="font-size:12px;color:var(--muted);margin-bottom:.75rem">Once set up, both Alex and Chloe see the same reports. Get these from your Supabase project \u2192 Settings \u2192 API.</p>';
+  h+='<div class="sett-row"><label class="sett-label">Supabase URL<small>Looks like https://xxxx.supabase.co</small></label><input class="sett-input full" type="text" id="s-sb-url" value="'+esc(cfg.supabaseUrl||'')+'" placeholder="https://xxxx.supabase.co"></div>';
+  h+='<div class="sett-row"><label class="sett-label">Anon Key<small>Safe to use in a browser</small></label><input class="sett-input full" type="password" id="s-sb-key" value="'+esc(cfg.supabaseKey||'')+'" placeholder="eyJ\u2026"></div>';
+  h+='</div>';
   // claude api
   h+='<div class="sett-section"><h3>Claude AI Insights <small>optional</small></h3>';
   h+='<div class="sett-row"><label class="sett-label">API Key<small>Get one at console.anthropic.com</small></label><input class="sett-input full" type="password" id="s-apikey" value="'+esc(cfg.claudeApiKey||'')+'" placeholder="sk-ant-..."></div>';
@@ -1064,8 +1126,16 @@ function saveSettings(){
   const jt=document.getElementById('g-jm-target'); if(jt&&cfg.goals?.joint?.mandatory) cfg.goals.joint.mandatory.monthlyTarget=parseFloat(jt.value)||0;
   // api key
   const ak=document.getElementById('s-apikey'); if(ak) cfg.claudeApiKey=ak.value.trim();
+  // supabase
+  const sbUrl=document.getElementById('s-sb-url'); if(sbUrl) cfg.supabaseUrl=sbUrl.value.trim();
+  const sbKey=document.getElementById('s-sb-key'); if(sbKey) cfg.supabaseKey=sbKey.value.trim();
   saveCfg();
-  toast('\u2705 Settings saved');
+  if(cfg.supabaseUrl&&cfg.supabaseKey){
+    showSyncBtn();
+    syncSave().then(ok=>toast(ok?'\u2601\ufe0f Settings saved & synced':'\u2705 Settings saved (sync failed \u2014 check URL/key)'));
+  } else {
+    toast('\u2705 Settings saved');
+  }
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1081,8 +1151,13 @@ function dlReport(){
 // ═══════════════════════════════════════════════════════
 // INIT
 // ═══════════════════════════════════════════════════════
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded',async ()=>{
   try{
+    if(STATE.config.supabaseUrl&&STATE.config.supabaseKey){
+      showSyncBtn();
+      const synced=await syncLoad();
+      if(synced) toast('\u2601\ufe0f Synced from cloud');
+    }
     seedIfNeeded();
     populateMonthSel();
     if(STATE.history.length){
@@ -1096,7 +1171,7 @@ document.addEventListener('DOMContentLoaded',()=>{
     console.error('[Budget App] Init error:', err);
     document.body.insertAdjacentHTML('afterbegin',
       '<div style="background:#ff5c5c;color:#fff;padding:1rem 1.5rem;font-family:monospace;font-size:13px;position:fixed;top:0;left:0;right:0;z-index:9999">'+
-      '<strong>App error:</strong> '+err.message+' — <button onclick="if(confirm(\'Clear all saved data and reload?\'))'+
+      '<strong>App error:</strong> '+err.message+' \u2014 <button onclick="if(confirm(\'Clear all saved data and reload?\'))'+
       '{localStorage.removeItem(\'hb_config\');localStorage.removeItem(\'hb_history\');location.reload();}" '+
       'style="margin-left:1rem;background:transparent;border:1px solid #fff;color:#fff;padding:3px 10px;border-radius:4px;cursor:pointer;font-family:monospace">'+
       'Clear data &amp; reload</button>'+
