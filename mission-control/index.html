@@ -1,0 +1,450 @@
+<title>Mission Control — Alex</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  /* ============ TOKENS ============ */
+  :root {
+    --bg:        #15171d;
+    --bg-grid:   #1a1d24;
+    --panel:     #1c1f27;
+    --panel-2:   #21252f;
+    --raised:    #262b36;
+    --border:    #2d323e;
+    --border-2:  #383e4c;
+    --ink:       #eae8e2;
+    --ink-soft:  #b9bdc7;
+    --muted:     #8b909c;
+    --faint:     #666c78;
+    --accent:    #f2a638;   /* signal amber */
+    --accent-dim:#8a6421;
+    --teal:      #5cbccb;
+    --good:      #46b98a;
+    --warn:      #f2a638;
+    --crit:      #e46b54;
+    --good-bg:   rgba(70,185,138,.13);
+    --warn-bg:   rgba(242,166,56,.13);
+    --crit-bg:   rgba(228,107,84,.13);
+    --shadow:    0 1px 0 rgba(255,255,255,.02), 0 8px 30px -12px rgba(0,0,0,.6);
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg:#efece4; --bg-grid:#e8e4da; --panel:#ffffff; --panel-2:#faf8f3; --raised:#f3f0e8;
+      --border:#e3ddd0; --border-2:#d6cfbe; --ink:#22262e; --ink-soft:#41474f; --muted:#6c7079;
+      --faint:#9aa0a8; --accent:#c9821a; --accent-dim:#e7cfa0; --teal:#2e93a6;
+      --good:#2f9e75; --warn:#c9821a; --crit:#cf5238;
+      --good-bg:rgba(47,158,117,.12); --warn-bg:rgba(201,130,26,.12); --crit-bg:rgba(207,82,56,.12);
+      --shadow:0 1px 2px rgba(30,25,15,.05), 0 10px 26px -16px rgba(60,50,30,.28);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg:#15171d; --bg-grid:#1a1d24; --panel:#1c1f27; --panel-2:#21252f; --raised:#262b36;
+    --border:#2d323e; --border-2:#383e4c; --ink:#eae8e2; --ink-soft:#b9bdc7; --muted:#8b909c; --faint:#666c78;
+    --accent:#f2a638; --accent-dim:#8a6421; --teal:#5cbccb; --good:#46b98a; --warn:#f2a638; --crit:#e46b54;
+    --good-bg:rgba(70,185,138,.13); --warn-bg:rgba(242,166,56,.13); --crit-bg:rgba(228,107,84,.13);
+    --shadow:0 1px 0 rgba(255,255,255,.02), 0 8px 30px -12px rgba(0,0,0,.6);
+  }
+  :root[data-theme="light"] {
+    --bg:#efece4; --bg-grid:#e8e4da; --panel:#ffffff; --panel-2:#faf8f3; --raised:#f3f0e8;
+    --border:#e3ddd0; --border-2:#d6cfbe; --ink:#22262e; --ink-soft:#41474f; --muted:#6c7079; --faint:#9aa0a8;
+    --accent:#c9821a; --accent-dim:#e7cfa0; --teal:#2e93a6; --good:#2f9e75; --warn:#c9821a; --crit:#cf5238;
+    --good-bg:rgba(47,158,117,.12); --warn-bg:rgba(201,130,26,.12); --crit-bg:rgba(207,82,56,.12);
+    --shadow:0 1px 2px rgba(30,25,15,.05), 0 10px 26px -16px rgba(60,50,30,.28);
+  }
+
+  * { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body {
+    margin:0; font-family:var(--sans); color:var(--ink); background:var(--bg);
+    background-image:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-grid) 1px, transparent 1px);
+    background-size:44px 44px, 44px 44px;
+    background-position:-1px -1px;
+    line-height:1.5; letter-spacing:.01em;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap { max-width:1280px; margin:0 auto; padding:22px clamp(14px,3vw,30px) 60px; }
+
+  /* ============ HEADER ============ */
+  header.top {
+    display:flex; align-items:flex-end; justify-content:space-between; gap:16px;
+    flex-wrap:wrap; padding-bottom:18px; margin-bottom:20px;
+    border-bottom:1px solid var(--border);
+  }
+  .brand { display:flex; align-items:center; gap:14px; }
+  .beacon {
+    width:12px; height:12px; border-radius:50%; background:var(--good);
+    box-shadow:0 0 0 4px var(--good-bg), 0 0 14px var(--good);
+    flex:none;
+  }
+  @media (prefers-reduced-motion:no-preference){ .beacon{ animation:pulse 2.6s ease-in-out infinite; } }
+  @keyframes pulse { 0%,100%{ opacity:1 } 50%{ opacity:.45 } }
+  .brand h1 {
+    margin:0; font-size:clamp(18px,2.4vw,23px); font-weight:750; letter-spacing:.02em;
+    text-wrap:balance;
+  }
+  .brand .sub {
+    font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--muted); margin-top:3px;
+  }
+  .clockbox { text-align:right; display:flex; flex-direction:column; gap:2px; }
+  .clock { font-family:var(--mono); font-size:26px; font-weight:600; font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+  .datestr { font-family:var(--mono); font-size:11px; letter-spacing:.13em; text-transform:uppercase; color:var(--muted); }
+  .themebtn {
+    margin-top:6px; align-self:flex-end; font-family:var(--mono); font-size:10.5px; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--muted); background:transparent; border:1px solid var(--border-2);
+    border-radius:6px; padding:4px 9px; cursor:pointer;
+  }
+  .themebtn:hover { color:var(--ink); border-color:var(--faint); }
+
+  /* ============ KPI STRIP ============ */
+  .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(178px,1fr)); gap:12px; margin-bottom:20px; }
+  .kpi {
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    border:1px solid var(--border); border-radius:12px; padding:14px 16px; box-shadow:var(--shadow);
+    position:relative; overflow:hidden;
+  }
+  .kpi::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--stripe,var(--accent)); }
+  .kpi .lab { font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); }
+  .kpi .val { font-family:var(--mono); font-size:34px; font-weight:600; line-height:1.05; margin-top:8px; font-variant-numeric:tabular-nums; }
+  .kpi .val small { font-size:14px; font-weight:600; color:var(--muted); margin-left:3px; }
+  .kpi .note { font-size:12px; color:var(--ink-soft); margin-top:5px; }
+
+  /* ============ GRID ============ */
+  .grid { display:grid; grid-template-columns:repeat(12,1fr); gap:16px; align-items:start; }
+  .panel {
+    background:var(--panel); border:1px solid var(--border); border-radius:14px;
+    box-shadow:var(--shadow); overflow:hidden; grid-column:span 12;
+  }
+  @media (min-width:760px){
+    .col-6 { grid-column:span 6; } .col-5 { grid-column:span 5; } .col-7 { grid-column:span 7; }
+    .col-4 { grid-column:span 4; } .col-8 { grid-column:span 8; }
+  }
+  .p-head {
+    display:flex; align-items:center; gap:10px; padding:14px 16px 12px;
+    border-bottom:1px solid var(--border);
+  }
+  .p-head .ico { font-family:var(--mono); font-size:11px; letter-spacing:.1em; color:var(--accent); }
+  .p-head h2 { margin:0; font-size:14.5px; font-weight:680; letter-spacing:.01em; }
+  .p-head .tag {
+    margin-left:auto; font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--muted); border:1px solid var(--border-2); border-radius:20px; padding:3px 9px;
+  }
+  .p-body { padding:8px 16px 16px; }
+
+  /* rows / lists */
+  .row { display:flex; gap:11px; padding:9px 0; border-bottom:1px solid var(--border); }
+  .row:last-child { border-bottom:0; }
+  .t { font-family:var(--mono); font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums; white-space:nowrap; padding-top:1px; min-width:44px; }
+  .row .body { flex:1; min-width:0; }
+  .row .title { font-size:13.5px; font-weight:560; }
+  .row .meta { font-size:12px; color:var(--muted); margin-top:1px; }
+  .dot { width:7px; height:7px; border-radius:50%; margin-top:6px; flex:none; background:var(--faint); }
+  .dot.teal{background:var(--teal);} .dot.amber{background:var(--accent);} .dot.good{background:var(--good);} .dot.crit{background:var(--crit);}
+
+  /* checkable tasks */
+  .task { display:flex; gap:11px; align-items:flex-start; padding:9px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+  .task:last-child { border-bottom:0; }
+  .task input { appearance:none; -webkit-appearance:none; width:18px; height:18px; margin:1px 0 0; flex:none;
+    border:1.6px solid var(--border-2); border-radius:5px; background:var(--raised); cursor:pointer; position:relative; }
+  .task input:checked { background:var(--accent); border-color:var(--accent); }
+  .task input:checked::after { content:"✓"; position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; color:#1a1205; }
+  .task input:focus-visible { outline:2px solid var(--teal); outline-offset:2px; }
+  .task .tt { flex:1; font-size:13.5px; }
+  .task .tt .sub { font-size:12px; color:var(--muted); margin-top:1px; }
+  .task.done .tt { color:var(--faint); text-decoration:line-through; text-decoration-color:var(--border-2); }
+  .task.done .tt .sub { text-decoration:none; }
+  .chip { font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; padding:2px 7px; border-radius:20px; white-space:nowrap; }
+  .chip.good{ background:var(--good-bg); color:var(--good); } .chip.warn{ background:var(--warn-bg); color:var(--warn); } .chip.crit{ background:var(--crit-bg); color:var(--crit); }
+  .chip.teal{ background:rgba(92,188,203,.14); color:var(--teal); }
+  .chip.b{ border:1px solid var(--border-2); color:var(--muted); }
+
+  /* finance countdown */
+  .fin { display:flex; gap:16px; align-items:center; padding:4px 0 12px; border-bottom:1px solid var(--border); margin-bottom:8px; }
+  .fin .big { font-family:var(--mono); font-size:46px; font-weight:600; line-height:1; font-variant-numeric:tabular-nums; color:var(--accent); }
+  .fin .big small { font-size:15px; color:var(--muted); font-weight:600; }
+  .fin .fmeta { font-size:12.5px; color:var(--ink-soft); }
+  .fin .fmeta b { color:var(--ink); font-weight:650; }
+
+  /* team roster */
+  .team { display:grid; grid-template-columns:repeat(auto-fill,minmax(150px,1fr)); gap:9px; }
+  .member { background:var(--panel-2); border:1px solid var(--border); border-radius:10px; padding:10px 11px; display:flex; flex-direction:column; gap:2px; position:relative; }
+  .member::before{ content:""; position:absolute; left:0; top:9px; bottom:9px; width:3px; border-radius:3px; background:var(--st,var(--good)); }
+  .member .nm { font-size:13px; font-weight:640; padding-left:6px; }
+  .member .rl { font-size:11px; color:var(--muted); padding-left:6px; }
+  .member .lm { font-family:var(--mono); font-size:10.5px; color:var(--ink-soft); padding-left:6px; margin-top:3px; font-variant-numeric:tabular-nums; }
+  .member .lm span { color:var(--faint); }
+
+  .foot { margin-top:26px; padding-top:16px; border-top:1px solid var(--border); display:flex; gap:14px; flex-wrap:wrap;
+    font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--faint); align-items:center; }
+  .foot .sync { color:var(--muted); }
+  a.lnk { color:var(--teal); text-decoration:none; border-bottom:1px solid transparent; }
+  a.lnk:hover { border-bottom-color:var(--teal); }
+  .hint { font-size:11.5px; color:var(--faint); margin:2px 0 10px; }
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="beacon" id="beacon"></div>
+      <div>
+        <h1>Mission Control</h1>
+        <div class="sub">Alex Atkinson · ZenOwn Ops Console</div>
+      </div>
+    </div>
+    <div class="clockbox">
+      <div class="clock" id="clock">--:--</div>
+      <div class="datestr" id="datestr">—</div>
+      <button class="themebtn" id="themebtn" type="button">◐ Theme</button>
+    </div>
+  </header>
+
+  <!-- KPI TELEMETRY -->
+  <section class="kpis" aria-label="Status telemetry">
+    <div class="kpi" style="--stripe:var(--accent)">
+      <div class="lab">Next invoice run</div>
+      <div class="val" id="kpi-inv">–<small>days</small></div>
+      <div class="note" id="kpi-inv-note">Reminder fires the 14th</div>
+    </div>
+    <div class="kpi" style="--stripe:var(--teal)">
+      <div class="lab">Meetings today</div>
+      <div class="val">14<small>on cal</small></div>
+      <div class="note">3 external client calls</div>
+    </div>
+    <div class="kpi" style="--stripe:var(--warn)">
+      <div class="lab">Actions due</div>
+      <div class="val" id="kpi-actions">3<small>open</small></div>
+      <div class="note">Trackable this week</div>
+    </div>
+    <div class="kpi" style="--stripe:var(--good)">
+      <div class="lab">July finance</div>
+      <div class="val" style="color:var(--good)">✓<small>done</small></div>
+      <div class="note">Expenses sent 16 Jul</div>
+    </div>
+  </section>
+
+  <div class="grid">
+
+    <!-- TODAY'S FLIGHT PLAN -->
+    <section class="panel col-7">
+      <div class="p-head"><span class="ico">▤</span><h2>Today's Flight Plan</h2><span class="tag">Fri 17 Jul</span></div>
+      <div class="p-body">
+        <p class="hint">Your priorities — tap to check off. Saved on this device.</p>
+        <div id="priorities"></div>
+        <div style="height:14px"></div>
+        <div class="p-head" style="padding:12px 0 8px; border-bottom:1px solid var(--border)">
+          <span class="ico">◷</span><h2 style="font-size:13px">Schedule</h2>
+          <span class="tag">14 events</span>
+        </div>
+        <div id="agenda"></div>
+      </div>
+    </section>
+
+    <div style="grid-column:span 12; display:contents">
+      <!-- INVOICE / EXPENSE CYCLE -->
+      <section class="panel col-5">
+        <div class="p-head"><span class="ico">$</span><h2>Invoice &amp; Expense Cycle</h2><span class="tag">Monthly · 15th</span></div>
+        <div class="p-body">
+          <div class="fin">
+            <div class="big" id="fin-days">–<small>d</small></div>
+            <div class="fmeta">
+              until your <b>next invoice run</b><br>
+              <span id="fin-line">Invoices go out the <b>15th</b> · reminder <b>14th</b></span>
+            </div>
+          </div>
+          <p class="hint">This month's checklist — carries over until ticked.</p>
+          <div id="finance"></div>
+        </div>
+      </section>
+
+      <!-- CLIENT RADAR -->
+      <section class="panel col-5">
+        <div class="p-head"><span class="ico">◎</span><h2>Client Radar</h2><span class="tag">Upcoming</span></div>
+        <div class="p-body" id="radar"></div>
+      </section>
+
+      <!-- TEAM ROSTER -->
+      <section class="panel col-7">
+        <div class="p-head"><span class="ico">⧉</span><h2>Team — Last Contact</h2><span class="tag">Green = seen ≤ 7d</span></div>
+        <div class="p-body">
+          <div class="team" id="team"></div>
+        </div>
+      </section>
+
+      <!-- WATCHLIST -->
+      <section class="panel col-5">
+        <div class="p-head"><span class="ico">⚑</span><h2>Watchlist &amp; Reminders</h2><span class="tag">Self-set</span></div>
+        <div class="p-body" id="watch"></div>
+      </section>
+
+      <!-- WEEK AHEAD -->
+      <section class="panel col-7">
+        <div class="p-head"><span class="ico">»</span><h2>Week Ahead</h2><span class="tag">Mon 20 – Fri 24 Jul</span></div>
+        <div class="p-body" id="week"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="foot">
+    <span class="sync">◇ SYNCED 17 JUL 2026 · 07:40 CEST</span>
+    <span>SOURCES: GOOGLE CAL · GMAIL · GRANOLA</span>
+    <span style="margin-left:auto">Refreshed each morning by your briefing routine</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var $ = function(id){ return document.getElementById(id); };
+
+  /* ---------- theme ---------- */
+  var root = document.documentElement;
+  $("themebtn").addEventListener("click", function(){
+    var cur = root.getAttribute("data-theme");
+    if(!cur){ cur = matchMedia("(prefers-color-scheme: dark)").matches ? "dark":"light"; }
+    root.setAttribute("data-theme", cur === "dark" ? "light":"dark");
+  });
+
+  /* ---------- clock ---------- */
+  function tick(){
+    var d = new Date();
+    var hh = String(d.getHours()).padStart(2,"0"), mm = String(d.getMinutes()).padStart(2,"0"), ss = String(d.getSeconds()).padStart(2,"0");
+    $("clock").textContent = hh+":"+mm+":"+ss;
+    $("datestr").textContent = d.toLocaleDateString("en-GB",{weekday:"long",day:"numeric",month:"long"}).toUpperCase();
+  }
+  tick(); setInterval(tick,1000);
+
+  /* ---------- finance countdown (live) ---------- */
+  (function(){
+    var now = new Date();
+    var y = now.getFullYear(), m = now.getMonth(), day = now.getDate();
+    var next = new Date(y, m, 15);
+    if(day >= 15){ next = new Date(y, m+1, 15); }
+    var days = Math.ceil((next - new Date(y,m,day)) / 86400000);
+    $("fin-days").innerHTML = days + '<small>d</small>';
+    $("kpi-inv").innerHTML = days + '<small>days</small>';
+    var opt = {day:"numeric", month:"short"};
+    var rem = new Date(next); rem.setDate(14);
+    $("kpi-inv-note").textContent = "Reminder " + rem.toLocaleDateString("en-GB",opt) + " · run " + next.toLocaleDateString("en-GB",opt);
+  })();
+
+  /* ---------- data ---------- */
+  var priorities = [
+    { t:"Prep OXXO showroom materials", sub:"PMI Mexico session Thu 23 Jul — Arturo's request", chip:["warn","3d out"] },
+    { t:"Share ML update from today", sub:"Daily 16:30 reminder · post to team", chip:["teal","daily"] },
+    { t:"Unilever Personal Care — follow up demo", sub:"Demo ran 16 Jul · Abdella + Hussein", chip:["b","client"] },
+    { t:"Review Macedonia + Serbia push notifications", sub:"Token expiry watch on PMI Srbija", chip:["b","tech"] }
+  ];
+  var agenda = [
+    ["07:35","Morning Brief ready — check Slack","personal","good"],
+    ["09:45","Invoicing Drumbeat","4 people · finance cadence","amber"],
+    ["10:00","ZenOwn Shelf Creation AI — Unilever HC","6 people","teal"],
+    ["11:00","Alex / Mila","1:1","good"],
+    ["11:30","Alex / Mila / Goncalo","internal","good"],
+    ["13:00","ML Touchbase","7 people","teal"],
+    ["13:30","🎉 ZenOwn Friday Coffee","27 people · culture","good"],
+    ["14:00","Unilever <> ZenOwn Touchbase","5 people · client","teal"],
+    ["14:30","Product Team — Weekly update","11 people","teal"],
+    ["15:00","Petrol Pilot Internal","4 people","amber"],
+    ["15:30","TQGG x ZenOwn Weekly Connect","7 people · client","teal"],
+    ["16:00","Shelf Creation Daily Sprint","6 people","teal"],
+    ["16:45","Unilever Daily Check-in","4 people · client","teal"],
+    ["18:00","Reflection","personal","good"]
+  ];
+  var finance = [
+    { t:"July expenses submitted", sub:"Sent to Blaz & Hristijan — 16 Jul", chip:["good","done"], done:true },
+    { t:"Log trip invoices from July travel", sub:"Gatwick / client visits — attach receipts", chip:["warn","open"] },
+    { t:"Reconcile Uber & transport receipts", sub:"~12 rides this month in Gmail", chip:["b","open"] },
+    { t:"Confirm PMFTC invoice R0181 paid", sub:"PO 5701764886 · sent by Hristijan", chip:["b","track"] },
+    { t:"Miscellaneous month-end expenses", sub:"Anything else before 14th reminder", chip:["b","open"] }
+  ];
+  var radar = [
+    ["23 Jul","OXXO Showroom session","PMI Mexico · present updates + commercial agreements","crit","6d"],
+    ["20 Jul","PMI weekly marathon","Kosovo · Slovakia · Mexico · Serbia connects","amber","Mon"],
+    ["20 Jul","Design Sprint Review","Product team · 7 people","teal","Mon"],
+    ["16 Jul","Unilever PC demo — done","Follow-up owed to Abdella / Hussein","teal","recent"],
+    ["Ongoing","Petrol Pilot","Kicked off 15 Jul · internal build","teal","live"]
+  ];
+  var team = [
+    ["Mila","Product / client lead","16 Jul","good"],
+    ["Goncalo","Co-lead","16 Jul","good"],
+    ["Hristijan","Ops / finance","16 Jul","good"],
+    ["Blaz","Engineering","16 Jul","good"],
+    ["Alfredo","PMI Mexico","16 Jul","good"],
+    ["Marko","Serbia / PMI","16 Jul","good"],
+    ["Petar","Unilever","16 Jul","good"],
+    ["Mariana","Unilever","15 Jul","good"],
+    ["Niko","Delivery","15 Jul","good"],
+    ["Alper","Weekly sync","14 Jul","good"],
+    ["Manuel","Hiring / interviews","14 Jul","good"]
+  ];
+  var watch = [
+    ["Request Malaysia planograms","Next month's set — reminder 20 Jul","amber"],
+    ["Check Swarovski dashboard","Reminder 20 Jul","teal"],
+    ["Send V&B rejection report","Weekly · Villeroy & Boch","teal"],
+    ["PMI Srbija token expiration","Renew before it lapses","crit"],
+    ["Manuel's interview loop","1st interview done — follow up","teal"]
+  ];
+  var week = [
+    ["Mon 20","Heaviest day — PMI weeklies, Design Sprint, Mars, Product Weekly · Lenny's Meetup Lisbon 19:30","amber"],
+    ["Tue 21","Out of office","good"],
+    ["Wed 22","Sprint + client check-ins","teal"],
+    ["Thu 23","★ OXXO Showroom (PMI Mexico) — key client session","crit"],
+    ["Fri 24","Friday Coffee · weekly reflections","teal"]
+  ];
+
+  /* ---------- render ---------- */
+  function chipHTML(c){ return c ? '<span class="chip '+c[0]+'">'+c[1]+'</span>' : ""; }
+
+  function renderTasks(host, items, key){
+    var saved = {};
+    try { saved = JSON.parse(localStorage.getItem(key) || "{}"); } catch(e){}
+    host.innerHTML = "";
+    items.forEach(function(it, i){
+      var id = key+"_"+i;
+      var done = (it.done && saved[id] === undefined) ? true : !!saved[id];
+      var lab = document.createElement("label");
+      lab.className = "task" + (done ? " done":"");
+      lab.innerHTML = '<input type="checkbox" '+(done?"checked":"")+'>'+
+        '<span class="tt">'+it.t+(it.sub?'<div class="sub">'+it.sub+'</div>':'')+'</span>'+chipHTML(it.chip);
+      var box = lab.querySelector("input");
+      box.addEventListener("change", function(){
+        lab.classList.toggle("done", box.checked);
+        saved[id] = box.checked;
+        try { localStorage.setItem(key, JSON.stringify(saved)); } catch(e){}
+      });
+      host.appendChild(lab);
+    });
+  }
+  renderTasks($("priorities"), priorities, "mc_prio_20260717");
+  renderTasks($("finance"), finance, "mc_fin_202607");
+
+  $("agenda").innerHTML = agenda.map(function(r){
+    return '<div class="row"><div class="t">'+r[0]+'</div><div class="dot '+r[3]+'"></div>'+
+      '<div class="body"><div class="title">'+r[1]+'</div><div class="meta">'+r[2]+'</div></div></div>';
+  }).join("");
+
+  $("radar").innerHTML = radar.map(function(r){
+    return '<div class="row"><div class="t">'+r[0]+'</div><div class="dot '+r[3]+'"></div>'+
+      '<div class="body"><div class="title">'+r[1]+'</div><div class="meta">'+r[2]+'</div></div>'+
+      '<span class="chip '+r[3]+'" style="align-self:center">'+r[4]+'</span></div>';
+  }).join("");
+
+  $("team").innerHTML = team.map(function(m){
+    return '<div class="member" style="--st:var(--'+m[3]+')"><div class="nm">'+m[0]+'</div>'+
+      '<div class="rl">'+m[1]+'</div><div class="lm"><span>last</span> '+m[2]+'</div></div>';
+  }).join("");
+
+  $("watch").innerHTML = watch.map(function(w){
+    return '<div class="row"><div class="dot '+w[2]+'"></div><div class="body">'+
+      '<div class="title">'+w[0]+'</div><div class="meta">'+w[1]+'</div></div></div>';
+  }).join("");
+
+  $("week").innerHTML = week.map(function(w){
+    return '<div class="row"><div class="t">'+w[0]+'</div><div class="dot '+w[2]+'"></div>'+
+      '<div class="body"><div class="title" style="font-weight:540">'+w[1]+'</div></div></div>';
+  }).join("");
+})();
+</script>
