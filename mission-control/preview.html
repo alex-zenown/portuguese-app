@@ -211,6 +211,35 @@
   .member .rl { font-size:11px; color:var(--muted); padding-left:6px; }
   .member .lm { font-family:var(--mono); font-size:10.5px; color:var(--ink-soft); padding-left:6px; margin-top:3px; font-variant-numeric:tabular-nums; }
   .member .lm span { color:var(--faint); }
+  .member .ctl { display:flex; gap:5px; padding-left:6px; margin-top:6px; }
+  .member select, .member input[type=date] {
+    background:var(--raised); border:1px solid var(--border-2); border-radius:6px; color:var(--ink-soft);
+    font-family:var(--mono); font-size:10px; padding:3px 4px; max-width:50%; flex:1; min-width:0;
+  }
+  .member select:focus-visible, .member input[type=date]:focus-visible { outline:2px solid var(--teal); outline-offset:1px; }
+  .member .cchip { margin-top:5px; margin-left:6px; align-self:flex-start; }
+
+  /* monday tasks */
+  .mt .title a { color:var(--ink); text-decoration:none; border-bottom:1px dotted var(--border-2); }
+  .mt .title a:hover { border-bottom-color:var(--teal); color:var(--teal); }
+  .mt .chips { display:flex; gap:5px; flex-wrap:wrap; margin-top:3px; }
+
+  /* coverage */
+  .covlegend { display:flex; gap:8px; align-items:center; flex-wrap:wrap; padding:4px 0 10px; }
+  .covwrap { position:relative; max-width:780px; margin:0 auto; }
+  .covtip {
+    position:absolute; display:none; pointer-events:none; z-index:2;
+    background:var(--raised); border:1px solid var(--border-2); border-radius:8px; padding:7px 10px;
+    font-size:12px; box-shadow:var(--shadow); max-width:230px;
+  }
+  .covtip b { display:block; font-size:12.5px; }
+  .covtip .own { color:var(--muted); font-family:var(--mono); font-size:10.5px; margin-top:2px; }
+  #covsvg .spoke { stroke:var(--border-2); stroke-width:1; }
+  #covsvg .ring { stroke:var(--border); fill:none; }
+  #covsvg .node { stroke:var(--panel); stroke-width:2; cursor:pointer; }
+  #covsvg text { font-family:var(--mono); fill:var(--ink-soft); }
+  #covsvg .clbl { font-size:11px; font-weight:600; }
+  #covsvg .olbl { font-size:9.5px; fill:var(--muted); }
 
   .foot { margin-top:26px; padding-top:16px; border-top:1px solid var(--border); display:flex; gap:14px; flex-wrap:wrap;
     font-family:var(--mono); font-size:11px; letter-spacing:.06em; color:var(--faint); align-items:center; }
@@ -301,12 +330,41 @@
         </div>
       </section>
 
-      <!-- TEAM ROSTER -->
+      <!-- PRODUCT TEAM -->
       <section class="panel col-7">
-        <div class="p-head"><span class="ico">⧉</span><h2>Team — Last Contact</h2><span class="tag" id="st-team">loading</span></div>
+        <div class="p-head"><span class="ico">⧉</span><h2>Product Team</h2><span class="tag" id="st-team">loading</span></div>
         <div class="p-body">
           <div class="secmsg" id="msg-team"></div>
+          <p class="hint">Weekly attendees. Set level &amp; contract-review date per person — saved on this device.</p>
           <div class="team" id="team"></div>
+          <div class="p-head" style="padding:14px 0 8px; border-bottom:1px solid var(--border)">
+            <span class="ico">⧉</span><h2 style="font-size:13px">Wider Team</h2>
+          </div>
+          <div class="team" id="team2" style="margin-top:10px"></div>
+        </div>
+      </section>
+
+      <!-- MY TASKS (monday.com) -->
+      <section class="panel col-5">
+        <div class="p-head"><span class="ico">☰</span><h2>My Tasks — monday</h2><span class="tag" id="st-tasks">snapshot</span></div>
+        <div class="p-body">
+          <div class="secmsg" id="msg-tasks"></div>
+          <div id="mtasks"></div>
+        </div>
+      </section>
+
+      <!-- CLIENT COVERAGE -->
+      <section class="panel" style="grid-column:span 12">
+        <div class="p-head"><span class="ico">◈</span><h2>Client Coverage — who owns what</h2><span class="tag">30-day meeting data</span></div>
+        <div class="p-body">
+          <div class="covlegend">
+            <span class="chip good">● covered · 2+ owners</span>
+            <span class="chip warn">● single owner</span>
+            <span class="chip crit">● gap — no owner</span>
+            <span class="hint" style="margin:0 0 0 auto">Spoke length = meeting frequency · owners exclude Alex</span>
+          </div>
+          <div class="covwrap"><div id="covtip" class="covtip" role="status"></div><svg id="covsvg" viewBox="0 0 760 560" width="100%" aria-label="Client coverage radial map"></svg></div>
+          <div id="covgaps" class="hint" style="margin-top:4px"></div>
         </div>
       </section>
 
@@ -476,20 +534,38 @@
   /* ============================================================
      LIVE DATA via window.claude.mcp — Google Calendar + Gmail
      ============================================================ */
-  var TEAM = [
+  // Product Weekly roster (real attendees) + wider team
+  var PRODUCT_TEAM = [
+    ["Theodora","Weekly organiser","theodora"],
     ["Mila","Product / client lead","mila"],
     ["Goncalo","Co-lead","goncalo"],
+    ["Viktor","Product","viktor"],
+    ["Angela","Product","angela"],
+    ["Ela","Product","ela"],
+    ["Yousra","Product","yousra"],
+    ["Andrea","Product","andrea"],
+    ["Mariana","Product / ML","mariana"],
+    ["Maribel","Product","maribel"]
+  ];
+  var WIDER_TEAM = [
     ["Hristijan","Ops / finance","hristijan"],
     ["Blaz","Engineering","blaz"],
     ["Alfredo","PMI Mexico","alfredo"],
     ["Marko","Serbia / PMI","marko"],
     ["Petar","Unilever","petar"],
-    ["Mariana","Unilever","mariana"],
     ["Niko","Delivery","niko"],
     ["Alper","Weekly sync","alper"],
     ["Manuel","Hiring","manuel"]
   ];
+  var ALL_PEOPLE = PRODUCT_TEAM.concat(WIDER_TEAM);
   var SELF = "alex";
+  var LEVELS = ["—","Lead","Senior","Mid","Junior"];
+  function loadPeopleMeta(){
+    try { var v = JSON.parse(localStorage.getItem("mc_people_v1") || "{}"); if(v && typeof v === "object") return v; } catch(e){}
+    return {};
+  }
+  var peopleMeta = loadPeopleMeta();
+  function savePeopleMeta(){ try { localStorage.setItem("mc_people_v1", JSON.stringify(peopleMeta)); } catch(e){} }
 
   function setTag(id, cls, text){
     var el = $(id); el.className = "tag" + (cls ? " "+cls : ""); el.textContent = text;
@@ -553,9 +629,52 @@
     $("kpi-meet-note").textContent = ext + " external / client calls";
   }
 
-  /* ---- render: team ---- */
+  /* ---- render: team (product + wider, with level & contract review) ---- */
+  var teamLastSeen = {};
+  function contractChip(k){
+    var meta = peopleMeta[k] || {};
+    if(!meta.contract) return "";
+    var due = new Date(meta.contract + "T00:00:00");
+    var days = Math.ceil((due - new Date()) / 86400000);
+    if(days < 0)   return '<span class="chip crit cchip">contract review overdue</span>';
+    if(days <= 60) return '<span class="chip warn cchip">contract review in '+days+'d</span>';
+    return "";
+  }
+  function memberCard(m){
+    var k = m[2], d = teamLastSeen[k];
+    var stat, lm;
+    if(d){
+      var days = Math.floor((new Date() - d) / 86400000);
+      stat = days <= 7 ? "good" : "warn";
+      lm = d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}) + (days === 0 ? " · today" : " · " + days + "d ago");
+    } else { stat = "crit"; lm = "none in 14d"; }
+    var meta = peopleMeta[k] || {};
+    var lvlOpts = LEVELS.map(function(L){
+      return '<option value="'+L+'"'+((meta.level||"—")===L?" selected":"")+'>'+L+'</option>';
+    }).join("");
+    return '<div class="member" style="--st:var(--'+stat+')" data-k="'+esc(k)+'">'+
+      '<div class="nm">'+esc(m[0])+'</div><div class="rl">'+esc(m[1])+'</div>'+
+      '<div class="lm"><span>last</span> '+esc(lm)+'</div>'+
+      '<div class="ctl"><select aria-label="Level for '+esc(m[0])+'">'+lvlOpts+'</select>'+
+      '<input type="date" value="'+esc(meta.contract||"")+'" aria-label="Contract review date for '+esc(m[0])+'"></div>'+
+      contractChip(k)+'</div>';
+  }
+  function paintTeams(){
+    $("team").innerHTML  = PRODUCT_TEAM.map(memberCard).join("");
+    $("team2").innerHTML = WIDER_TEAM.map(memberCard).join("");
+    [].slice.call(document.querySelectorAll(".member")).forEach(function(card){
+      var k = card.getAttribute("data-k");
+      var sel = card.querySelector("select"), dt = card.querySelector("input[type=date]");
+      if(sel) sel.addEventListener("change", function(){
+        peopleMeta[k] = peopleMeta[k] || {}; peopleMeta[k].level = sel.value; savePeopleMeta();
+      });
+      if(dt) dt.addEventListener("change", function(){
+        peopleMeta[k] = peopleMeta[k] || {}; peopleMeta[k].contract = dt.value; savePeopleMeta(); paintTeams();
+      });
+    });
+  }
   function renderTeam(evts){
-    var lastSeen = {};
+    teamLastSeen = {};
     evts.forEach(function(e){
       if(e.status === "cancelled") return;
       var when = (e.start && (e.start.dateTime || e.start.date));
@@ -564,30 +683,119 @@
       (e.attendees || []).forEach(function(a){
         if(!a.email) return;
         var local = a.email.split("@")[0].toLowerCase();
-        TEAM.forEach(function(m){
+        ALL_PEOPLE.forEach(function(m){
           var k = m[2];
           if(k === SELF) return;
           if(local.indexOf(k) === 0){
-            if(!lastSeen[k] || d > lastSeen[k]) lastSeen[k] = d;
+            if(!teamLastSeen[k] || d > teamLastSeen[k]) teamLastSeen[k] = d;
           }
         });
       });
     });
-    var today = new Date();
-    $("team").innerHTML = TEAM.map(function(m){
-      var d = lastSeen[m[2]];
-      var stat, lm;
-      if(d){
-        var days = Math.floor((today - d) / 86400000);
-        stat = days <= 7 ? "good" : "warn";
-        lm = d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}) + (days === 0 ? " · today" : " · " + days + "d ago");
-      } else {
-        stat = "crit"; lm = "none in 14d";
-      }
-      return '<div class="member" style="--st:var(--'+stat+')"><div class="nm">'+esc(m[0])+'</div>'+
-        '<div class="rl">'+esc(m[1])+'</div><div class="lm"><span>last</span> '+esc(lm)+'</div></div>';
-    }).join("");
+    paintTeams();
   }
+  paintTeams(); // paint immediately; live calendar data refreshes last-contact
+
+  /* ---- render: my monday tasks (snapshot first, live overwrite) ---- */
+  var STATUS_CHIP = { "Working on it":"teal", "Revisions Needed":"warn", "Pending":"b", "On hold":"b", "Done":"good", "Ongoing":"teal" };
+  var PRIO_CHIP   = { "Critical ⚠️️":"crit", "High":"warn", "Medium":"b", "Low":"b" };
+  function renderMonday(items){
+    if(!items.length){
+      $("mtasks").innerHTML = '<div class="hint" style="padding:8px 0">No tasks assigned to you on the tracker. 🎉</div>';
+      return;
+    }
+    var overdue = 0, today = new Date();
+    $("mtasks").innerHTML = items.map(function(t){
+      var chips = "";
+      if(t.status) chips += '<span class="chip '+(STATUS_CHIP[t.status]||"b")+'">'+esc(t.status)+'</span>';
+      if(t.pr)     chips += '<span class="chip '+(PRIO_CHIP[t.pr]||"b")+'">'+esc(t.pr.replace(" ⚠️️",""))+'</span>';
+      if(t.due){
+        var d = new Date(t.due + "T00:00:00");
+        if(d < today && t.status !== "Done"){ overdue++; chips += '<span class="chip crit">overdue '+esc(d.toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"2-digit"}))+'</span>'; }
+        else chips += '<span class="chip b">due '+esc(d.toLocaleDateString("en-GB",{day:"numeric",month:"short"}))+'</span>';
+      }
+      var name = t.url ? '<a href="'+esc(t.url)+'" target="_blank" rel="noopener">'+esc(t.name)+'</a>' : esc(t.name);
+      return '<div class="row mt"><div class="dot '+(t.due && new Date(t.due) < today ? "crit":"teal")+'"></div>'+
+        '<div class="body"><div class="title">'+name+'</div>'+
+        '<div class="meta">Product Team Task Tracker · '+esc(t.grp||"")+'</div>'+
+        '<div class="chips">'+chips+'</div></div></div>';
+    }).join("");
+    if(overdue) setMsg("msg-tasks", overdue + " task" + (overdue===1?"":"s") + " overdue — worth a sweep");
+  }
+  var SNAP_TASKS = [
+    { name:"Research — CV Annotation Tools Alternatives", status:"Working on it", pr:"Medium", due:"2025-11-14", grp:"Pietro", url:"https://zenown-company.monday.com/boards/1501713171/pulses/5029951607" },
+    { name:"Design MX go-live flow in FigJam", status:"Working on it", pr:"Medium", due:"2025-11-14", grp:"Pietro", url:"https://zenown-company.monday.com/boards/1501713171/pulses/5048155725" },
+    { name:"Developer GANTT", status:"Revisions Needed", pr:"Low", grp:"Mariana", url:"https://zenown-company.monday.com/boards/1501713171/pulses/2974804216" },
+    { name:"ML documentation project", status:"Revisions Needed", pr:"Low", grp:"Mariana", url:"https://zenown-company.monday.com/boards/1501713171/pulses/2974816731" },
+    { name:"Dropbox folder organisation for Product", status:"Pending", pr:"Low", grp:"Yousra", url:"https://zenown-company.monday.com/boards/1501713171/pulses/5028693567" },
+    { name:"Monday.com scrum support", status:"Pending", pr:"Low", grp:"Yousra", url:"https://zenown-company.monday.com/boards/1501713171/pulses/5028701314" }
+  ];
+  renderMonday(SNAP_TASKS);
+
+  /* ---- render: client coverage spider ---- */
+  var COVERAGE = [
+    { c:"Unilever",     owners:["Blaz","Petar","Goncalo"],   n:10, s:"good" },
+    { c:"PMI Serbia",   owners:["Goncalo","Alejandra"],      n:6,  s:"good" },
+    { c:"PMI Mexico",   owners:["Alfredo","Mila","Blaz"],    n:4,  s:"good" },
+    { c:"Mars",         owners:["Maribel","Mahdi","Theodora"],n:3, s:"good" },
+    { c:"Kraft Heinz",  owners:["Mila","Alfredo","Blaz"],    n:2,  s:"good" },
+    { c:"PMI MKD",      owners:["Goncalo","Mila"],           n:2,  s:"good" },
+    { c:"Petrol",       owners:["Mahdi","Maribel"],          n:1,  s:"good" },
+    { c:"PMI Malaysia", owners:["Theodora"],                 n:2,  s:"warn" },
+    { c:"V&B",          owners:["Theodora"],                 n:2,  s:"warn" },
+    { c:"PMI HK",       owners:["Theodora"],                 n:1,  s:"warn" },
+    { c:"PMI Slovakia", owners:["Mila"],                     n:1,  s:"warn" },
+    { c:"PMI Kosovo",   owners:[],                           n:1,  s:"crit" },
+    { c:"TQGG",         owners:[],                           n:1,  s:"crit" },
+    { c:"Swarovski",    owners:[],                           n:0,  s:"crit" }
+  ];
+  (function drawCoverage(){
+    var svg = $("covsvg"), NS = "http://www.w3.org/2000/svg";
+    var cx = 380, cy = 275, maxR = 185;
+    function el(tag, attrs, text){
+      var e = document.createElementNS(NS, tag);
+      for(var a in attrs) e.setAttribute(a, attrs[a]);
+      if(text != null) e.textContent = text;
+      return e;
+    }
+    [0.25,0.5,0.75,1].forEach(function(f){
+      svg.appendChild(el("circle",{cx:cx,cy:cy,r:maxR*f,"class":"ring","stroke-dasharray":"3 4"}));
+    });
+    var N = COVERAGE.length;
+    COVERAGE.forEach(function(d, i){
+      var ang = (-90 + i * 360 / N) * Math.PI / 180;
+      var frac = 0.25 + 0.75 * Math.min(d.n, 10) / 10;
+      var r = maxR * frac;
+      var x = cx + r * Math.cos(ang), y = cy + r * Math.sin(ang);
+      var lx = cx + (maxR + 22) * Math.cos(ang), ly = cy + (maxR + 22) * Math.sin(ang);
+      var anchor = Math.abs(Math.cos(ang)) < 0.25 ? "middle" : (Math.cos(ang) > 0 ? "start" : "end");
+      svg.appendChild(el("line",{x1:cx,y1:cy,x2:x,y2:y,"class":"spoke"}));
+      var node = el("circle",{cx:x,cy:y,r:6,"class":"node",fill:"var(--"+d.s+")"});
+      svg.appendChild(node);
+      svg.appendChild(el("text",{x:lx,y:ly,"text-anchor":anchor,"class":"clbl"}, d.c));
+      svg.appendChild(el("text",{x:lx,y:ly+12,"text-anchor":anchor,"class":"olbl"},
+        d.owners.length ? d.owners.join(" · ") : "no owner"));
+      node.addEventListener("mouseenter", function(){
+        node.setAttribute("r","9");
+        var tip = $("covtip");
+        tip.innerHTML = "<b>"+esc(d.c)+"</b><span class='own'>"+
+          (d.owners.length ? "Owned by " + esc(d.owners.join(", ")) : "No regular owner besides you") +
+          " · " + d.n + " meeting" + (d.n===1?"":"s") + " / 30d</span>";
+        var box = svg.getBoundingClientRect();
+        tip.style.left = Math.min((x/760)*box.width + 14, box.width - 240) + "px";
+        tip.style.top  = (y/560)*box.height - 10 + "px";
+        tip.style.display = "block";
+      });
+      node.addEventListener("mouseleave", function(){
+        node.setAttribute("r","6"); $("covtip").style.display = "none";
+      });
+    });
+    var gaps = COVERAGE.filter(function(d){ return d.s !== "good"; });
+    $("covgaps").innerHTML = "<b style='color:var(--crit)'>Needs attention:</b> " +
+      esc(gaps.filter(function(d){return d.s==="crit";}).map(function(d){return d.c;}).join(", ")) +
+      " have no regular owner · single-owner risk on " +
+      esc(gaps.filter(function(d){return d.s==="warn";}).map(function(d){return d.c;}).join(", "));
+  })();
 
   /* ---- render: week ahead ---- */
   function renderWeek(evts, truncated){
@@ -727,10 +935,29 @@
       },
       { cache: { staleTime: 300000 } }
     );
+
+    // My monday tasks — live from the Product Team Task Tracker
+    watchSection("monday.com", "get_board_items_page",
+      { boardId: 1501713171, limit: 30, includeColumns: true, searchTerm: "Alex" },
+      "st-tasks", "msg-tasks",
+      function(res){
+        if(res === null){ return; } // authz retract: snapshot stays, message explains
+        var items = (res.payload && res.payload.items) || [];
+        var mine = items.filter(function(it){
+          return it.column_values && it.column_values.person === "Alex Atkinson";
+        }).map(function(it){
+          var cv = it.column_values;
+          return { name: it.name, url: it.url, status: cv.status || "", pr: cv.priority__1 || "",
+                   due: cv.date4 || "", grp: (it.group && it.group.title) || "" };
+        });
+        renderMonday(mine);
+      },
+      { cache: { staleTime: 300000 } }
+    );
   } else {
-    /* ---- PREVIEW MODE: snapshot of 17 Jul 2026, no connectors ---- */
+    /* ---- PREVIEW MODE: snapshot of 20 Jul 2026, no connectors ---- */
     var b = $("banner");
-    b.innerHTML = "<b>Preview build.</b> The live version pulls Alex's Google Calendar and Gmail on every open — this page shows a frozen snapshot from 17 Jul.";
+    b.innerHTML = "<b>Preview build.</b> The live version pulls Alex's Google Calendar, Gmail and monday.com on every open — this page shows a frozen snapshot from 20 Jul.";
     b.classList.add("show");
 
     function mkEv(date, time, title, n, ext){
@@ -742,32 +969,33 @@
         start:{ dateTime: date + "T" + time + ":00+02:00" } };
     }
 
-    // Today — Fri 17 Jul (real calendar snapshot)
-    var D = "2026-07-17";
+    // Today — Mon 20 Jul (real calendar snapshot)
+    var D = "2026-07-20";
     renderAgenda([
       mkEv(D,"07:35","Morning Brief ready — check Slack",0,false),
-      mkEv(D,"09:45","Invoicing Drumbeat",4,false),
-      mkEv(D,"10:00","ZenOwn Shelf Creation AI — Unilever HC",6,true),
-      mkEv(D,"11:00","Alex / Mila",2,false),
-      mkEv(D,"11:30","Alex / Mila / Goncalo",3,false),
+      mkEv(D,"08:00","Unilever Meeting Pre-Alignment",3,false),
+      mkEv(D,"09:00","Design Sprint Review",7,false),
+      mkEv(D,"10:15","Product Team Weekly",11,false),
+      mkEv(D,"11:00","SRB PMI-ZenOwn",8,true),
+      mkEv(D,"12:00","Mars Internal Weekly",5,false),
       mkEv(D,"13:00","ML Touchbase",7,false),
-      mkEv(D,"13:30","🎉 ZenOwn Friday Coffee",27,false),
-      mkEv(D,"14:00","Unilever <> ZenOwn Touchbase",5,true),
-      mkEv(D,"14:30","Product Team — Weekly update",11,false),
-      mkEv(D,"15:00","Petrol Pilot Internal",4,false),
-      mkEv(D,"15:30","TQGG x ZenOwn Weekly Connect",7,true),
-      mkEv(D,"16:00","Shelf Creation Daily Sprint",6,false),
+      mkEv(D,"14:30","PMI Kosovo <> ZenOwn Weekly Connect",7,true),
+      mkEv(D,"15:00","PMI Slovakia <> ZenOwn",6,true),
+      mkEv(D,"16:00","PMI Mexico <> ZenOwn Planogram Weekly",7,true),
       mkEv(D,"16:45","Unilever Daily Check-in",4,false),
-      mkEv(D,"17:30","Daily connect",3,false),
+      mkEv(D,"17:00","Niko Touchbase",5,false),
+      mkEv(D,"17:30","Shelf Creation Daily Sprint",6,false),
       mkEv(D,"18:00","Reflection",0,false)
     ]);
 
     // Team last-contact (from meeting history snapshot)
     renderTeam([
-      ["mila","2026-07-16"],["goncalo","2026-07-16"],["hristijan","2026-07-16"],
-      ["blaz","2026-07-16"],["alfredo","2026-07-16"],["marko","2026-07-16"],
-      ["petar","2026-07-16"],["mariana","2026-07-15"],["niko","2026-07-15"],
-      ["alper","2026-07-14"],["manuel","2026-07-14"]
+      ["theodora","2026-07-20"],["mila","2026-07-17"],["goncalo","2026-07-17"],
+      ["viktor","2026-07-20"],["angela","2026-07-20"],["ela","2026-07-13"],
+      ["yousra","2026-07-13"],["andrea","2026-07-10"],["mariana","2026-07-15"],
+      ["maribel","2026-07-17"],["hristijan","2026-07-16"],["blaz","2026-07-17"],
+      ["alfredo","2026-07-16"],["marko","2026-07-16"],["petar","2026-07-17"],
+      ["niko","2026-07-15"],["alper","2026-07-14"],["manuel","2026-07-14"]
     ].map(function(p){
       return { status:"confirmed", summary:"Meeting", attendees:[{email:p[0]+"@zenown.com"}],
         start:{ dateTime: p[1] + "T10:00:00+02:00" } };
@@ -775,19 +1003,13 @@
 
     // Week ahead
     var wk = [];
-    wk.push(mkEv("2026-07-20","09:00","Design Sprint Review",7,false));
-    wk.push(mkEv("2026-07-20","11:00","SRB PMI-ZenOwn",8,true));
-    wk.push(mkEv("2026-07-20","14:30","PMI Kosovo <> ZenOwn Weekly Connect",7,true));
-    wk.push(mkEv("2026-07-20","15:00","PMI Slovakia <> ZenOwn",6,true));
-    wk.push(mkEv("2026-07-20","16:00","PMI Mexico <> ZenOwn Planogram Weekly",7,true));
-    wk.push({ status:"confirmed", summary:"Out of office", attendees:[],
-      start:{ date:"2026-07-21" } });
+    wk.push({ status:"confirmed", summary:"Out of office", attendees:[], start:{ date:"2026-07-21" } });
     wk.push(mkEv("2026-07-22","16:00","Shelf Creation Daily Sprint",6,false));
     wk.push(mkEv("2026-07-22","16:45","Unilever Daily Check-in",4,false));
     wk.push(mkEv("2026-07-23","10:00","OXXO Showroom — PMI Mexico",9,true));
     wk.push(mkEv("2026-07-23","16:00","Shelf Creation Daily Sprint",6,false));
     wk.push(mkEv("2026-07-24","13:30","🎉 ZenOwn Friday Coffee",27,false));
-    wk.push(mkEv("2026-07-24","18:00","Reflection",0,false));
+    wk.push(mkEv("2026-07-24","14:30","Product Team - Weekly update",11,false));
     renderWeek(wk, false);
 
     // Finance signals (Gmail snapshot)
@@ -802,7 +1024,8 @@
     ]});
 
     ["st-agenda","st-week","st-team","st-fin"].forEach(function(id){ setTag(id, "live", "demo"); });
-    $("foot-sync").textContent = "◇ SNAPSHOT 17 JUL 2026 · PREVIEW BUILD";
+    setTag("st-tasks", "live", "demo");
+    $("foot-sync").textContent = "◇ SNAPSHOT 20 JUL 2026 · PREVIEW BUILD";
   }
 })();
 </script>
